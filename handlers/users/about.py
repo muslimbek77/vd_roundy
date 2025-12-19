@@ -5,5 +5,5 @@ from aiogram.filters import Command
 #about commands
 @dp.message(Command("about"))
 async def about_commands(message:Message):
-    await message.answer("Sifat 2024")
+    await message.answer("Muslim team")
 

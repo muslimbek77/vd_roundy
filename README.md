@@ -11,7 +11,11 @@ Linux/Mac
 python3 -m venv venv && source venv/bin/activate && pip3 install -r requirements.txt
 ```
 
-### 2. Create .env file and copy all variables from .env_example to it and customize your self (if needed)
+### 2. Configure environment
+- Create `.env` file and set required variables:
+	- `BOT_TOKEN=123456:ABC...`
+	- `ADMINS=123456789,987654321`
+- If present, you can copy from `.env copy` and update values.
 
 ### 3. Run bot.py
 Windows
@@ -22,3 +26,9 @@ Linux/Mac
 ```shell
 python3 bot.py
 ```
+
+### Notes
+- Uses `aiogram==3.20.0.post0` with modern middleware and routers.
+- Default bot parse mode is HTML (set in loader).
+- Throttling and subscription middlewares are enabled in `bot.py`.
+- SQLite DB is auto-initialized on startup; tables `Users` and `Channels`.

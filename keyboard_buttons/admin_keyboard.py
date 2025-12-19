@@ -1,6 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from loader import dp, db, bot
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
 admin_button = ReplyKeyboardMarkup(
@@ -44,3 +42,12 @@ def inline_wars_btn(wars):
     wars_check = InlineKeyboardMarkup(inline_keyboard=[l])
     
     return wars_check
+
+
+def channel_add_options() -> InlineKeyboardMarkup:
+    buttons = [
+        InlineKeyboardButton(text="Postni forward qilish", callback_data="add_forward"),
+        InlineKeyboardButton(text="ID yuborish (-100...)", callback_data="add_id"),
+        InlineKeyboardButton(text="Username yuborish (@kanal)", callback_data="add_username"),
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
