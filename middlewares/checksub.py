@@ -18,7 +18,7 @@ class BigBrother(BaseMiddleware):
         user = None
         if isinstance(event, Message):
             user = event.from_user.id
-            if event.text in ["/start", "/help"]:
+            if event.text in ["/start", "/help", "/about"]:
                 return await handler(event, data)
         elif isinstance(event, CallbackQuery):
             user = event.from_user.id

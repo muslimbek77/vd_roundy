@@ -1,12 +1,11 @@
 from loader import bot,db,dp,ADMINS
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import Message,InlineKeyboardButton,ReplyKeyboardRemove,CallbackQuery
 from aiogram.filters import Command
 from filters.admin import IsBotAdminFilter
 from states.reklama import Adverts,ChannelState,DelChannelState
 from aiogram.fsm.context import FSMContext #new
 from keyboard_buttons import admin_keyboard
-import time 
+import asyncio
 from aiogram import F
 
 @dp.message(Command("admin"),IsBotAdminFilter(ADMINS))
@@ -38,7 +37,7 @@ async def send_advert(message:Message,state:FSMContext):
             count += 1
         except:
             pass
-        time.sleep(0.01)
+        await asyncio.sleep(0.01)
     
     await message.answer(f"Reklama {count}ta foydalanuvchiga yuborildi")
     await state.clear()
@@ -61,9 +60,11 @@ async def send_ad_to_all(message: Message):
 
 @dp.message(F.text=="➕ Kanal qo'shish", IsBotAdminFilter(ADMINS))
 async def send_ad_to_all(message: Message, state = FSMContext):
-    await message.answer("Birinchi navbatda botni kanalga qo'shing.")
-    await message.answer("Kanaldan biror postni forward qiling, \nyoki kanal id sini yuboring (-100....) \nyoki username sini yuboring ( misol uchun:  @mychannel )")
     await state.set_state(ChannelState.kanal_qoshish)
+    await message.answer(
+        "Birinchi navbatda botni kanalga qo'shing.\n\nKanalni qo'shish usulini tanlang:",
+        reply_markup=admin_keyboard.channel_add_options(),
+    )
     
     
 @dp.message(ChannelState.kanal_qoshish, IsBotAdminFilter(ADMINS))
@@ -91,6 +92,19 @@ async def send_ad_to_all(message: Message, state = FSMContext):
     except Exception as err:
         await message.answer(f"Oldin botni kanal yoki guruhga qo'shing, so'ngra qaytadan urinib ko'ring.\n\nYoki bot linki to'g'riligiga e'tibor bering: {err}",reply_markup=admin_keyboard.admin_button)
     await state.clear()
+
+
+@dp.callback_query(F.data.in_({"add_forward", "add_id", "add_username"}), IsBotAdminFilter(ADMINS))
+async def channel_add_help(call: CallbackQuery, state: FSMContext):
+    await state.set_state(ChannelState.kanal_qoshish)
+
+    instructions = {
+        "add_forward": "Kanaldan biror postni forward qiling.",
+        "add_id": "Kanal ID sini yuboring (masalan: -1001234567890).",
+        "add_username": "Kanal username yuboring (masalan: @mychannel).",
+    }
+    await call.message.answer(instructions.get(call.data, "Ma'lumot yuboring."))
+    await call.answer()
         
         
         
