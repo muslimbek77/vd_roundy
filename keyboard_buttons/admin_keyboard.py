@@ -1,53 +1,81 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+import logging
+from typing import List, Tuple
+from aiogram.types import (
+    ReplyKeyboardMarkup, KeyboardButton,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
 
+logger = logging.getLogger(__name__)
 
+# Admin menyu tugmalari
 admin_button = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="Foydalanuvchilar soni"),
             KeyboardButton(text="Reklama yuborish"),
         ],
-         [
-            KeyboardButton(text="⛓ Kanallar ro'yxati"), 
+        [
+            KeyboardButton(text="⛓ Kanallar ro'yxati"),
         ],
-         [
-            KeyboardButton(text="➕ Kanal qo'shish"), 
-            KeyboardButton(text="➖ Kanal o'chirish"), 
+        [
+            KeyboardButton(text="➕ Kanal qo'shish"),
+            KeyboardButton(text="➖ Kanal o'chirish"),
         ],
-        
     ],
-   resize_keyboard=True,
-   input_field_placeholder="Menudan birini tanlang"
+    resize_keyboard=True,
+    input_field_placeholder="📋 Menudan birini tanlang"
 )
 
-def inline_wars_btn(wars):
-    if len(wars)<=6:
-        row = 3
-    elif len(wars)<=8: 
-        row = 4
-    elif len(wars)<=12: 
-        row = 6
-    elif len(wars)<=16: 
-        row = 8
-    else:
-        row = 10
+
+def inline_wars_btn(channels: List[Tuple]) -> InlineKeyboardMarkup:
+    """
+    Kanallarni tanlash uchun inline buttons yaratish
     
+    Args:
+        channels: Kanallar ro'yxati
     
-    l = []
-    tr = 1
-    for war in wars:
-        l.append(InlineKeyboardButton(text=f"{tr}", callback_data=f"{war[0]}"))
-        tr += 1
-    l.append(InlineKeyboardButton(text=f"Asosiy menuga qaytish", callback_data=f"back_admin"))
-    wars_check = InlineKeyboardMarkup(inline_keyboard=[l])
+    Returns:
+        InlineKeyboardMarkup: Inline keyboard markup
+    """
+    if not channels:
+        logger.warning("No channels provided for inline buttons")
+        return InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="↩️ Orqaga", callback_data="back_admin")
+        ]])
     
-    return wars_check
+    # Tugmalar soniga ko'ra qatorni aniqlash
+    button_count = len(channels)
+    buttons_per_row = 3 if button_count <= 6 else 4 if button_count <= 8 else 6
+    
+    # Tugmalarni yaratish
+    buttons = []
+    for idx, channel in enumerate(channels, 1):
+        channel_id = channel[0]
+        buttons.append(InlineKeyboardButton(
+            text=f"#{idx}",
+            callback_data=str(channel_id)
+        ))
+    
+    # Qatorlarga bo'lish
+    keyboard = []
+    for i in range(0, len(buttons), buttons_per_row):
+        keyboard.append(buttons[i:i + buttons_per_row])
+    
+    # Orqaga tugmasi
+    keyboard.append([
+        InlineKeyboardButton(text="↩️ Orqaga", callback_data="back_admin")
+    ])
+    
+    logger.debug(f"Created inline keyboard with {len(buttons)} channels")
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 def channel_add_options() -> InlineKeyboardMarkup:
+    """Kanal qo'shish usullarini tanlash tugmalari"""
     buttons = [
-        InlineKeyboardButton(text="Postni forward qilish", callback_data="add_forward"),
-        InlineKeyboardButton(text="ID yuborish (-100...)", callback_data="add_id"),
-        InlineKeyboardButton(text="Username yuborish (@kanal)", callback_data="add_username"),
+        [InlineKeyboardButton(text="📌 Postni forward qilish", callback_data="add_forward")],
+        [InlineKeyboardButton(text="🔢 ID yuborish (-100...)", callback_data="add_id")],
+        [InlineKeyboardButton(text="📝 Username yuborish (@kanal)", callback_data="add_username")],
     ]
-    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+    logger.debug("Channel add options keyboard created")
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
