@@ -1,6 +1,6 @@
 import logging
 from aiogram import F
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import CommandStart
 from keyboard_buttons.subscription import check_button
@@ -49,6 +49,15 @@ async def start_command(message: Message) -> None:
 @dp.callback_query(F.data == "check_subs")
 async def recheck_subscriptions(call: CallbackQuery) -> None:
     user_id = call.from_user.id
+
+    if user_id in set(ADMINS) or db.is_admin(user_id):
+        await call.answer("✅ Siz admin sifatida majburiy obunadan ozodsiz.", show_alert=True)
+        try:
+            await call.message.delete()
+        except TelegramAPIError:
+            pass
+        return
+
     channels = db.select_all_channels(detailed=True, active_only=True)
 
     if not channels:
@@ -94,9 +103,13 @@ async def recheck_subscriptions(call: CallbackQuery) -> None:
         missing_channels_text += "\nQo'shimcha havolalar:\n" + extra_links_text
 
     await call.answer("❌ Hali barcha kanallarga obuna bo'lmagansiz.", show_alert=True)
-    await call.message.edit_text(
-        missing_channels_text,
-        disable_web_page_preview=True,
-        reply_markup=await check_button(join_channel),
-        parse_mode="HTML",
-    )
+    try:
+        await call.message.edit_text(
+            missing_channels_text,
+            disable_web_page_preview=True,
+            reply_markup=await check_button(join_channel),
+            parse_mode="HTML",
+        )
+    except TelegramBadRequest as error:
+        if "message is not modified" not in str(error).lower():
+            raise

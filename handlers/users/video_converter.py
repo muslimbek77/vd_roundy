@@ -24,17 +24,28 @@ async def handle_video_to_note(message: Message) -> None:
     try:
         db.touch_user(message.from_user.id, message.from_user.full_name or "Unknown")
         await notify_video_submission(message, "Oddiy video -> yumaloq video")
-        result = await convert_video_to_video_note(message.bot, message.video.file_id)
-        await message.answer_video_note(
-            video_note=FSInputFile(result.path),
+        result = await convert_video_to_video_note(
+            message.bot,
+            message.video.file_id,
+            duration_seconds=message.video.duration or 0,
         )
-        await status_message.edit_text("✅ Tayyor! Yumaloq video yuborildi.")
+        for note_path in result.paths:
+            await message.answer_video_note(video_note=FSInputFile(note_path))
+        await status_message.edit_text(
+            f"✅ Tayyor! {len(result.paths)} ta yumaloq video yuborildi."
+        )
     except ConversionError as error:
         logger.warning("Video to video_note conversion failed: %s", error)
-        await status_message.edit_text(
-            "❌ Bu videoni qayta ishlashning imkoni bo'lmadi. "
-            "Iltimos, boshqa videoni yuborib qayta urinib ko'ring."
-        )
+        error_text = str(error)
+        if "too long" in error_text.lower():
+            await status_message.edit_text(
+                "❌ Video 3 daqiqadan uzun. Iltimos, 3 daqiqagacha bo'lgan video yuboring."
+            )
+        else:
+            await status_message.edit_text(
+                "❌ Bu videoni qayta ishlashning imkoni bo'lmadi. "
+                "Iltimos, boshqa videoni yuborib qayta urinib ko'ring."
+            )
     except TelegramAPIError as error:
         logger.warning("Telegram API error while sending video_note: %s", error)
         await status_message.edit_text(_humanize_delivery_error(error))

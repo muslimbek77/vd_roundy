@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardRemove
 from aiogram.exceptions import TelegramAPIError
 from keyboard_buttons.subscription import check_button
 from utils.misc import subscription
-from loader import db
+from loader import ADMINS, db
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,8 @@ class BigBrother(BaseMiddleware):
     def _should_skip_check(event: TelegramObject) -> bool:
         """Tekshiruvni o'tkazish kerakmi"""
         if isinstance(event, Message):
-            return event.text in BigBrother.SKIP_COMMANDS
+            text = (event.text or "").strip()
+            return any(text.startswith(command) for command in BigBrother.SKIP_COMMANDS)
         elif isinstance(event, CallbackQuery):
             return event.data in BigBrother.SKIP_CALLBACK
         return False
@@ -74,6 +75,10 @@ class BigBrother(BaseMiddleware):
             if not bot:
                 logger.error("Bot not found in data")
                 return False
+
+            if user_id in ADMINS or db.is_admin(user_id):
+                logger.debug("Skipping subscription check for admin %s", user_id)
+                return True
             
             channels = db.select_all_channels(detailed=True, active_only=True)
             if not channels:

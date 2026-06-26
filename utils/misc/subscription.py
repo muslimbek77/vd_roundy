@@ -28,9 +28,13 @@ async def check(user_id: int, channel: int, bot: Bot) -> bool:
 
     except TelegramForbiddenError as e:
         logger.warning(f"Bot access denied for channel {channel}: {e}")
-        # Bot kanal yoki guruhdan chiqarilgan
-        return False
-    
+        try:
+            from loader import db
+            db.disable_channel(channel_id=channel)
+        except Exception as db_error:
+            logger.error(f"Failed to disable inaccessible channel {channel}: {db_error}")
+        return True
+
     except TelegramBadRequest as e:
         logger.warning(f"Bad request for channel {channel}: {e}")
         error_text = str(e).lower()
@@ -44,13 +48,34 @@ async def check(user_id: int, channel: int, bot: Bot) -> bool:
             except Exception as db_error:
                 logger.error(f"Failed to delete channel from DB: {db_error}")
             return False
-        
+
+        if any(
+            text in error_text
+            for text in [
+                "chat_admin_required",
+                "bot is not a member",
+                "bot was kicked",
+                "not enough rights",
+                "forbidden",
+            ]
+        ):
+            logger.warning(
+                "Channel %s is not checkable right now, disabling it to avoid blocking users",
+                channel,
+            )
+            try:
+                from loader import db
+                db.disable_channel(channel_id=channel)
+            except Exception as db_error:
+                logger.error(f"Failed to disable channel {channel}: {db_error}")
+            return True
+
         return False
-    
+
     except TelegramAPIError as e:
         logger.error(f"Telegram API error for channel {channel}: {e}")
         return False
-    
+
     except Exception as e:
         logger.error(f"Unexpected error in subscription check: {e}", exc_info=True)
         return False
