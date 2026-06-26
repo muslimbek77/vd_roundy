@@ -28,6 +28,13 @@ class BigBrother(BaseMiddleware):
         user_id = self._get_user_id(event)
         if user_id is None:
             return await handler(event, data)
+
+        if db.is_banned(user_id):
+            if isinstance(event, Message):
+                await event.answer("⛔ Siz ushbu botdan foydalanishdan chetlatilgansiz.")
+            elif isinstance(event, CallbackQuery):
+                await event.answer("Siz ushbu botdan foydalanishdan chetlatilgansiz.", show_alert=True)
+            return
         
         # Tekshirish laridan o'tkazish kerak bo'ladigan holatlar
         if self._should_skip_check(event):
@@ -68,7 +75,7 @@ class BigBrother(BaseMiddleware):
                 logger.error("Bot not found in data")
                 return False
             
-            channels = db.select_all_channels()
+            channels = db.select_all_channels(detailed=True, active_only=True)
             if not channels:
                 logger.debug(f"No channels to check for user {user_id}")
                 return True
@@ -76,14 +83,24 @@ class BigBrother(BaseMiddleware):
             join_channel = []
             all_subscribed = True
             missing_channels_text = "Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling:\n"
+            extra_links_text = ""
             
-            for channel_id, channel_name, channel_link in channels:
+            for channel_id, channel_name, channel_link, channel_mode, _, _, _ in channels:
                 try:
-                    is_subscribed = await subscription.check(
-                        user_id=user_id,
-                        channel=channel_id,
-                        bot=bot
-                    )
+                    if channel_mode == "external_link":
+                        join_channel.append([channel_link, channel_name, 0])
+                        extra_links_text += f"🤖 <a href='{channel_link}'>{channel_name}</a>\n"
+                        continue
+
+                    is_subscribed = False
+                    if db.has_channel_join(channel_id, user_id):
+                        is_subscribed = True
+                    else:
+                        is_subscribed = await subscription.check(
+                            user_id=user_id,
+                            channel=channel_id,
+                            bot=bot
+                        )
                     
                     if not is_subscribed:
                         all_subscribed = False
@@ -97,6 +114,8 @@ class BigBrother(BaseMiddleware):
             
             # Agar obuna bo'lmagan kanallar bo'lsa, habar yuborish
             if not all_subscribed:
+                if extra_links_text:
+                    missing_channels_text += "\nQo'shimcha havolalar:\n" + extra_links_text
                 reply_markup = await check_button(join_channel)
                 await self._send_subscription_message(event, missing_channels_text, reply_markup)
                 return False

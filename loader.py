@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # Konfiguratsiyani olib olish
 ADMINS: List[int] = config.ADMINS
 TOKEN: str = config.BOT_TOKEN
+DATABASE_URL = config.DATABASE_URL
 
 # Bot va Dispatcher ini yaratish
 try:
@@ -27,7 +28,7 @@ except Exception as e:
 
 # Database ni yaratish
 try:
-    db = Database(path_to_db="main.db", debug=False)
+    db = Database(path_to_db="main.db", debug=False, database_url=DATABASE_URL)
     logger.info("Database initialized successfully")
 except Exception as e:
     logger.error(f"Failed to initialize database: {e}")

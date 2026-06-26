@@ -34,6 +34,7 @@ try:
     
     BOT_TOKEN: str = env.str("BOT_TOKEN")
     ADMINS: List[int] = list(map(int, env.list("ADMINS")))
+    DATABASE_URL: str | None = env.str("DATABASE_URL", None)
     
     logger.info(f"Configuration loaded successfully. Admins: {len(ADMINS)}")
     

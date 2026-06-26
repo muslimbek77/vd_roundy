@@ -11,11 +11,11 @@ async def help_commands(message: Message) -> None:
     """Yordam komandasi"""
     help_text = (
         "🆘 <b>Yordam</b>\n\n"
-        "Bot quyidagi xizmatlarni taqdim etadi:\n\n"
-        "• 📢 Kanallar orqali habarlar olish\n"
-        "• 🔔 Muhim yangiliklar haqida bildirishnoma\n"
-        "• ⚙️ Shaxsiy sozlamalar\n\n"
-        "Savollaringiz bo'lsa, admin bilan bog'laning."
+        "• Oddiy video yuboring, bot uni yumaloq video qilib beradi.\n"
+        "• Yumaloq video yuboring, bot uni oddiy MP4 video qilib beradi.\n"
+        "• Fayl qayta ishlanayotganda biroz kuting, bot tayyor bo'lgach natijani yuboradi.\n\n"
+        "Agar Telegram audio yoki video message qabul qilishni cheklagan bo'lsa, "
+        "bot sizga uni yoqib qayta urinib ko'rishni aytadi."
     )
     await message.answer(help_text, parse_mode="HTML")
     logger.info(f"Help requested by user {message.from_user.id}")

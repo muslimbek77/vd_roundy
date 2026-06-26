@@ -1,1 +1,1 @@
-"""Channels handlers package."""
+from . import join_requests

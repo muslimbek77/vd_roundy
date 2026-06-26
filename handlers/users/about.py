@@ -11,12 +11,10 @@ async def about_commands(message: Message) -> None:
     """Bot haqida malumot"""
     about_text = (
         "ℹ️ <b>Bot haqida</b>\n\n"
-        "Ushbu bot Muslim Team tomonidan yaratilgan.\n\n"
-        "🔗 <b>Bizni kuzatib boring:</b>\n"
-        "• Telegram: @muslim_team\n"
-        "• Website: https://example.com\n\n"
-        "📝 Bot versiyasi: 1.0.0"
+        "Ushbu bot Telegram videolarini ikki format o'rtasida aylantiradi:\n\n"
+        "• to'rtburchak video -> yumaloq video\n"
+        "• yumaloq video -> oddiy MP4 video\n\n"
+        "📝 Bot versiyasi: 2.0.0"
     )
     await message.answer(about_text, parse_mode="HTML", disable_web_page_preview=True)
     logger.info(f"About requested by user {message.from_user.id}")
-
